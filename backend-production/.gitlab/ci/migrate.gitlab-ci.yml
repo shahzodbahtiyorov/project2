@@ -1,0 +1,5 @@
+.migrate_template:
+  stage: migrate
+  image: registry.cloudgate.uz/devops/docker:dind
+  script:
+    - migrate -path=$PWD/$PATH_MIGRATION -database="${POSTGRES_LINK}?sslmode=disable&x-migrations-table=migrations_$CI_PROJECT_NAME" up

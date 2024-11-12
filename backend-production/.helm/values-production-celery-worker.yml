@@ -1,0 +1,154 @@
+# Default values for microservice.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+global:
+  replicaCount: 1
+  environment: {}
+  # list of key: value
+  # GLOBAL1: value
+labels:
+  app: unired-business-backend-celery-beat
+replicaCount: 1
+
+image:
+  registry: registry.cloudgate.uz
+  repository: /unired-business/backend
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "production"
+
+imagePullSecrets: "gitlab-registry"
+nameOverride: ""
+fullnameOverride: ""
+
+# command: ["/bin/sh","-c"]
+# args: ["echo 'consuming a message'; sleep 5"]
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: "vault-auth"
+
+podAnnotations:
+  vault.hashicorp.com/agent-inject: "true"
+  vault.hashicorp.com/auth-path: "auth/kubernetes-unisoft"
+  vault.hashicorp.com/agent-inject-secret-.env: "secret/data/k8s/unisoft-prod/unired-business"
+  vault.hashicorp.com/secret-volume-path-.env: "/unired-business"
+  vault.hashicorp.com/role: "unisoft-prod"
+  vault.hashicorp.com/agent-inject-template-.env: |
+    {{- with secret "secret/data/k8s/unisoft-prod/unired-business" -}}
+    {{- range $key, $value := .Data.data }}
+    {{ $key }}={{ $value }}
+    {{- end }}
+    {{ end -}}
+    {{- with secret "secret/data/k8s/unisoft-prod/cdn" -}}
+    {{- range $key, $value := .Data.data }}
+    {{ $key }}={{ $value }}
+    {{- end }}
+    {{ end -}}
+    {{- with secret "secret/data/k8s/unisoft-prod/postgres" -}}
+    {{- range $key, $value := .Data.data }}
+    {{ $key }}={{ $value }}
+    {{- end }}
+    {{ end -}}
+
+    {{- with secret "secret/data/k8s/unisoft-prod/redis" -}}
+    {{- range $key, $value := .Data.data }}
+    {{ $key }}={{ $value }}
+    {{- end }}
+    {{ end -}}
+
+podLabels:
+  app: unired-business-backend-celery-beat
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #     - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+vault:
+  enabled: false
+  secretName: vault-secrets
+  variables:
+    VAULT_TOKEN: vault_token
+    SECRETS_PATH: vault_path
+
+environment:
+  APPLICATION: celery_worker
+
+volumes:
+  enabled: false
+  pvc:
+    enabled: false
+    existing_claim:
+    name: pvc
+    mountPath: /pv
+    size: 1G
+    class:
+    accessModes:
+      - ReadWriteOnce
+
+service:
+  type: ClusterIP
+  annotations: {}
+  specs:
+    - port: 8000
+      targetPort: 8000
+      name: http
+
+ingress:
+  enabled: false
+  rules:
+    - annotations:
+        nginx.ingress.kubernetes.io/proxy-body-size: "0"
+        nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+        nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+        kubernetes.io/ingress.class: nginx
+        # cert-manager.io/cluster-issuer: letsencrypt-prod
+      type: web
+      hosts:
+        - host: "unired-business.api.cloudgate.uz"
+          path: /
+          servicePort: 8000
+      # tls:
+      #   - secretName: test-api-auth-tls
+      #     hosts:
+      #       - "unired-business.api.cloudgate.uz"
+
+# resources:
+#    limits:
+#      cpu: 150m
+#      memory: 256Mi
+#    requests:
+#      cpu: 100m
+#      memory: 200Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: node-role.kubernetes.io/app
+              operator: Exists

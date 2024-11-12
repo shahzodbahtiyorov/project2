@@ -1,0 +1,62 @@
+# Meta
+include:
+  - .gitlab/ci/*.gitlab-ci.yml
+
+stages:
+  - build
+  - migrate
+  - deploy
+  - rollback
+
+
+# Stages
+build-production:
+  stage: build
+  extends: .build_template
+
+  variables:
+    DEPLOYMENT: "unired-business-backend"
+    ENV_TAG: production
+    DOCKERFILE: Dockerfile
+
+  only:
+    - production
+
+deploy-production:
+  stage: deploy
+  extends: .deploy_template
+
+  variables:
+    DEPLOYMENT: "unired-business-backend"
+    NAMESPACE: production
+    VALUES_FILE: .helm/values-production.yml
+    K8SCONFIGJSON: $KUBECONFIG
+
+  only:
+    - production
+
+  before_script:
+    - echo $K8SCONFIGJSON > tmp
+    - yq -P tmp > /root/.kube/config
+    - chmod 600 /root/.kube/config
+
+  script:
+    - |
+      APPLICATIONS=(
+        "django"
+      )
+      for APPLICATION in "${APPLICATIONS[@]}"; do
+        helm repo add --username $HELM_REGISTRY_USERNAME --password $HELM_REGISTRY_PASSWORD $HELM_REPO_NAME $HELM_REGISTRY_PATH
+        helm upgrade --install $DEPLOYMENT-$APPLICATION $HELM_REPO_NAME/$HELM_CHART_NAME --set=image.tag=$CI_PIPELINE_IID --values .helm/values-production-$APPLICATION.yml -n $NAMESPACE --create-namespace
+      done
+
+rollback-production:
+  stage: rollback
+  extends: .rollback_template
+
+  variables:
+    DEPLOYMENT: "unired-business-backend"
+    NAMESPACE: production
+    K8SCONFIGJSON: $KUBECONFIG
+
+  when: manual

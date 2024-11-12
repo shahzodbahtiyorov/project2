@@ -1,0 +1,17 @@
+.rollback_template:
+  stage: rollback
+  image: registry.cloudgate.uz/devops/docker:dind
+
+  variables:
+    GIT_STRATEGY: none
+
+  script:
+    # - export KUBECONFIG=~/.kube/config
+    # - kubectl config set-context --current --namespace=$NAMESPACE
+
+    - echo $K8SCONFIGJSON > tmp
+    - yq -P tmp > /root/.kube/config
+    - chmod 600 /root/.kube/config
+
+    - DEPLOYMENT=$(echo $CI_PROJECT_NAME | sed s/_/-/g | sed s/$CI_PROJECT_NAMESPACE-//g)
+    - helm rollback $DEPLOYMENT --namespace=$NAMESPACE

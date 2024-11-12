@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <title>Transaction Report</title>
+    <style type="text/css">
+        @font-face {
+            font-family: Whipsmart;
+            src: url('/static/fonts/Whipsmart.ttf');
+        }
+        body {
+            font-family: Whipsmart, Arial, sans-serif;
+            color: #000000; /* Black text */
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #007BFF; /* Blue border */
+            border-radius: 8px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+            font-weight: bold; /* Bold heading */
+            color: #000; /* Black heading */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-weight: bold; /* Bold text in table */
+            color: #000; /* Black text for the entire table */
+        }
+        th, td {
+            border: 1px solid #007BFF; /* Blue borders */
+            padding: 8px; /* Reduced padding for smaller height */
+            text-align: left;
+            color: #000; /* Ensure text is black */
+        }
+        th {
+            background-color: #007BFF; /* Blue background */
+            color: white; /* White text for header */
+        }
+        tr:nth-child(even) {
+            background-color: #eaeaea; /* Light gray for even rows */
+        }
+        .label {
+            font-weight: bold; /* Bold labels */
+            color: black; /* Black color for labels */
+        }
+          .stamp {
+           border: none;
+            outline: none;
+
+            display: block;
+            margin-left: 100px;
+            width: 500px; /* Adjust width as needed */
+            height: 150px; /* Maintain aspect ratio */
+        }
+    </style>
+</head>
+<body>
+    <h1>Transaction Report</h1>
+
+    <table>
+        <tr>
+            <th>Label</th>
+            <th>Details</th>
+        </tr>
+        <tr>
+            <td class="label">External ID:</td>
+            <td>{{ ext_id }}</td>
+        </tr>
+        <tr>
+            <td class="label">Sender Company:</td>
+            <td>{{ sender_company }}</td>
+        </tr>
+        <tr>
+            <td class="label">Sender Account:</td>
+            <td>{{ sender_company_account }}</td>
+        </tr>
+        <tr>
+            <td class="label">Sender MFO:</td>
+            <td>{{ sender_company_mfo }}</td>
+        </tr>
+        <tr>
+            <td class="label">Sender INN:</td>
+            <td>{{ sender_company_inn }}</td>
+        </tr>
+        <tr>
+            <td class="label">Receiver:</td>
+            <td>{{ receiver_name }}</td>
+        </tr>
+        <tr>
+            <td class="label">Receiver Account:</td>
+            <td>{{ receiver_company_account }}</td>
+        </tr>
+        <tr>
+            <td class="label">Receiver MFO:</td>
+            <td>{{ receiver_mfo }}</td>
+        </tr>
+        <tr>
+            <td class="label">Receiver INN:</td>
+            <td>{{ receiver_inn }}</td>
+        </tr>
+        <tr>
+            <td class="label">Transaction Date:</td>
+            <td>{{ transaction_date }}</td>
+        </tr>
+        <tr>
+            <td class="label">Contract Number:</td>
+            <td>{{ contract_number }}</td>
+        </tr>
+        <tr>
+            <td class="label">Details:</td>
+            <td>{{ details }}</td>
+        </tr>
+        <tr>
+            <td class="label">Status:</td>
+            <td>{{ status }}</td>
+        </tr>
+        {% if is_credit == 1 %}
+        <tr>
+            <td class="label">Credit Amount:</td>
+            <td style="color: green">{{ credit_amount }}</td>
+        </tr>
+        {% elif is_credit == 2 %}
+        <tr>
+            <td class="label">Debit Amount:</td>
+            <td style="color: red">{{ debit_amount }}</td>
+        </tr>
+        {% endif %}
+    </table>
+ <img src="/static/stamp/stamp.png" alt="Stamp" class="stamp" />
+</body>
+</html>
